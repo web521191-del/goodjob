@@ -1,0 +1,183 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>冷氣安裝線上快速估價</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        .option-card { transition: all 0.2s; cursor: pointer; border: 2px solid #e5e7eb; }
+        .option-card.active { border-color: #3b82f6; background-color: #eff6ff; }
+        .step-content { display: none; }
+        .step-content.active { display: block; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px; width: 24px;
+            border-radius: 50%; background: #3b82f6;
+            cursor: pointer; box-shadow: 0 0 2px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen pb-32">
+
+    <!-- Header -->
+    <header class="bg-blue-700 text-white p-6 text-center shadow-md">
+        <h1 class="text-2xl font-bold tracking-wider">冷氣安裝線上估價系統</h1>
+        <p class="text-sm opacity-80 mt-1">快速、透明、專業</p>
+    </header>
+
+    <main class="max-w-xl mx-auto p-4 mt-4">
+        
+        <!-- 進度條 -->
+        <div class="flex justify-between mb-8 px-2">
+            <div class="step-indicator text-blue-600 font-bold" id="step-1-label">1. 空間</div>
+            <div class="step-indicator text-gray-400" id="step-2-label">2. 安裝</div>
+            <div class="step-indicator text-gray-400" id="step-3-label">3. 品牌</div>
+        </div>
+
+        <!-- STEP 1: 空間診斷 -->
+        <section id="step-1" class="step-content active bg-white rounded-2xl shadow-sm p-6">
+            <h2 class="text-xl font-bold mb-6 flex items-center"><i class="fas fa-expand-arrows-alt mr-2 text-blue-500"></i> 您的空間大小</h2>
+            
+            <div class="mb-8">
+                <label class="block text-gray-600 mb-2">預估坪數：<span id="display-area" class="text-blue-600 font-bold text-2xl">5</span> 坪</label>
+                <input type="range" id="input-area" min="2" max="15" value="5" class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                <div class="flex justify-between text-xs text-gray-400 mt-2">
+                    <span>2 坪</span><span>15 坪</span>
+                </div>
+            </div>
+
+            <h3 class="text-lg font-bold mb-4">特殊環境 (可複選)</h3>
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="option-card p-4 rounded-xl text-center" onclick="toggleOption(this, 'west')">
+                    <div class="text-2xl mb-1">☀️</div>
+                    <div class="text-sm font-bold">有西曬</div>
+                </div>
+                <div class="option-card p-4 rounded-xl text-center" onclick="toggleOption(this, 'top')">
+                    <div class="text-2xl mb-1">🏠</div>
+                    <div class="text-sm font-bold">頂樓</div>
+                </div>
+            </div>
+            
+            <div class="bg-blue-50 p-4 rounded-lg mb-6">
+                <p class="text-sm text-blue-800">💡 系統建議能力：<span id="suggest-kw" class="font-bold">2.8</span> kW</p>
+            </div>
+
+            <button onclick="nextStep(2)" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg transition shadow-lg">下一步：施工需求</button>
+        </section>
+
+        <!-- STEP 2: 施工細節 -->
+        <section id="step-2" class="step-content bg-white rounded-2xl shadow-sm p-6">
+            <h2 class="text-xl font-bold mb-6 flex items-center"><i class="fas fa-tools mr-2 text-blue-500"></i> 安裝環境細節</h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="block font-bold mb-3">室外機架</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="option-card p-3 rounded-lg text-center active" onclick="selectSingle(this, 'bracket', 0)">
+                            <div class="text-sm">不需架子 (落地)</div>
+                        </div>
+                        <div class="option-card p-3 rounded-lg text-center" onclick="selectSingle(this, 'bracket', 1500)">
+                            <div class="text-sm">鍍鋅豪華架 (+1,500)</div>
+                        </div>
+                        <div class="option-card p-3 rounded-lg text-center" onclick="selectSingle(this, 'bracket', 3500)">
+                            <div class="text-sm">不鏽鋼架 (+3,500)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold mb-3">洗孔需求 (磚牆)</label>
+                    <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                        <span>需要洗孔 ($1,000/孔)</span>
+                        <div class="flex items-center gap-4">
+                            <button onclick="changeQty('hole', -1)" class="w-8 h-8 rounded-full bg-white border shadow-sm">-</button>
+                            <span id="qty-hole" class="font-bold">0</span>
+                            <button onclick="changeQty('hole', 1)" class="w-8 h-8 rounded-full bg-white border shadow-sm">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold mb-3">預估超出標配銅管 (米)</label>
+                    <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                        <span>超出 5 米後的部分 ($500/米)</span>
+                        <div class="flex items-center gap-4">
+                            <button onclick="changeQty('pipe', -1)" class="w-8 h-8 rounded-full bg-white border shadow-sm">-</button>
+                            <span id="qty-pipe" class="font-bold">0</span>
+                            <button onclick="changeQty('pipe', 1)" class="w-8 h-8 rounded-full bg-white border shadow-sm">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button onclick="nextStep(1)" class="w-1/3 bg-gray-200 text-gray-700 py-4 rounded-xl font-bold">返回</button>
+                <button onclick="nextStep(3)" class="w-2/3 bg-blue-600 text-white py-4 rounded-xl font-bold shadow-lg">下一步：選擇品牌</button>
+            </div>
+        </section>
+
+        <!-- STEP 3: 品牌選擇 -->
+        <section id="step-3" class="step-content bg-white rounded-2xl shadow-sm p-6">
+            <h2 class="text-xl font-bold mb-6 flex items-center"><i class="fas fa-tags mr-2 text-blue-500"></i> 選擇喜好品牌</h2>
+            <p class="text-sm text-gray-500 mb-4">品牌價位包含機器設備與標準安裝費</p>
+            
+            <div class="grid grid-cols-1 gap-3 mb-8">
+                <div class="option-card p-4 rounded-xl flex justify-between items-center active" onclick="selectBrand(this, '日立 Hitachi', 1.1)">
+                    <span class="font-bold">日立 Hitachi (頂級/旗艦)</span>
+                    <span class="text-blue-600 text-sm">高價位</span>
+                </div>
+                <div class="option-card p-4 rounded-xl flex justify-between items-center" onclick="selectBrand(this, '國際 Panasonic', 1.0)">
+                    <span class="font-bold">國際 Panasonic (省電首選)</span>
+                    <span class="text-blue-600 text-sm">中價位</span>
+                </div>
+                <div class="option-card p-4 rounded-xl flex justify-between items-center" onclick="selectBrand(this, '大金 Daikin', 1.15)">
+                    <span class="font-bold">大金 Daikin (靜音舒適)</span>
+                    <span class="text-blue-600 text-sm">高價位</span>
+                </div>
+                <div class="option-card p-4 rounded-xl flex justify-between items-center" onclick="selectBrand(this, '國產品牌', 0.8)">
+                    <span class="font-bold">國產品牌 (超值首選)</span>
+                    <span class="text-blue-600 text-sm">平價</span>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button onclick="nextStep(2)" class="w-1/3 bg-gray-200 text-gray-700 py-4 rounded-xl font-bold">返回</button>
+                <button onclick="showSummary()" class="w-2/3 bg-orange-500 text-white py-4 rounded-xl font-bold shadow-lg">生成正式報價單</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 底部固定預算欄 -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-between items-center shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-40">
+        <div>
+            <p class="text-xs text-gray-500">目前預估總價</p>
+            <p class="text-2xl font-black text-orange-600 tracking-tight">NT$ <span id="total-price">0</span></p>
+        </div>
+        <button onclick="showSummary()" class="bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-md active:scale-95 transition">估價明細</button>
+    </div>
+
+    <!-- 報價單 Modal -->
+    <div id="modal-summary" class="fixed inset-0 bg-black/60 hidden z-50 p-4 items-center justify-center">
+        <div class="bg-white rounded-3xl w-full max-w-md overflow-hidden">
+            <div class="bg-blue-700 p-6 text-white text-center">
+                <h3 class="text-xl font-bold">估價明細結算單</h3>
+            </div>
+            <div class="p-6 space-y-3" id="summary-list">
+                <!-- 明細內容由 JS 生成 -->
+            </div>
+            <div class="p-6 border-t flex flex-col gap-3">
+                <button onclick="window.print()" class="w-full border-2 border-blue-600 text-blue-600 py-3 rounded-xl font-bold">列印/儲存 PDF</button>
+                <button onclick="closeModal()" class="w-full bg-gray-100 text-gray-500 py-3 rounded-xl font-bold">關閉窗口</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
