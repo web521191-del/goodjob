@@ -1,10 +1,15 @@
 // --- 資料定義 ---
-const pricingTable = [
-    { label: "2-3 坪 ($12,000)", value: 12000 },
-    { label: "3-5 坪 ($15,000)", value: 15000 },
-    { label: "5-7 坪 ($20,000)", value: 20000 },
-    { label: "7-9 坪 ($25,000)", value: 25000 }
-    // 請根據您的附件繼續增加...
+const pricingData = [
+    { range: "2坪內", kw: "2.2 kW", split: 4500, window: 1500 },
+    { range: "2~4 坪", kw: "2.8 kW", split: 4500, window: 1800 },
+    { range: "4~6 坪", kw: "3.6 kW", split: 5000, window: 2000 },
+    { range: "6~7 坪", kw: "4.1kW", split: 5500, window: 2500 },
+    { range: "8~9 坪", kw: "5.0kW", split: 6000, window: 2800 },
+    { range: "9~10 坪", kw: "6.3 kW", split: 6000, window: 3000 },
+    { range: "10~12 坪", kw: "7.1 ~ 8.0 kW", split: 7000, window: 3500 },
+    { range: "12~15 坪", kw: "9.0 kW", split: 9000, window: -1 }, // -1 代表需現場報價
+    { range: "15~18 坪", kw: "11kW", split: 12000, window: -1 },
+    { range: "18~20 坪", kw: "14kW", split: -1, window: -1 }
 ];
 
 const brands = {
@@ -23,15 +28,8 @@ const brands = {
 
 // --- 初始化頁面 ---
 document.addEventListener("DOMContentLoaded", () => {
-    // 填充坪數選單
-    const sqftSelect = document.getElementById('sqftPrice');
-    pricingTable.forEach(item => {
-        let opt = document.createElement('option');
-        opt.value = item.value;
-        opt.innerHTML = item.label;
-        sqftSelect.appendChild(opt);
-    });
-
+    updateSqftOptions(); // 初始化坪數選單
+    
     // 填充品牌選單
     const brandSelect = document.getElementById('brand');
     for (let b in brands) {
@@ -55,6 +53,25 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // --- 功能函數 ---
+function updateSqftOptions() {
+    const acType = document.getElementById('acType').value;
+    const sqftSelect = document.getElementById('sqftPrice');
+    sqftSelect.innerHTML = '';
+
+    pricingData.forEach(item => {
+        const price = (acType === 'split') ? item.split : item.window;
+        let opt = document.createElement('option');
+        opt.value = price;
+        
+        if (price === -1) {
+            opt.innerHTML = `${item.range} (${item.kw}) - 需視機型現場報價`;
+        } else {
+            opt.innerHTML = `${item.range} (${item.kw}) - $${price.toLocaleString()}`;
+        }
+        sqftSelect.appendChild(opt);
+    });
+}
+
 function nextStep(step) {
     document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
     document.getElementById('step' + step).classList.add('active');
@@ -80,7 +97,7 @@ function updateFloorOptions() {
     } else {
         for (let i = 2; i <= 10; i++) {
             let opt = document.createElement('option');
-            opt.value = (i - 1) * 100; // 每一層 +100 (假設從2樓開始算每一單位)
+            opt.value = (i - 1) * 100; // 每一層 +100
             opt.innerHTML = i + " 樓 (加收 " + opt.value + ")";
             levelSelect.appendChild(opt);
         }
@@ -103,10 +120,19 @@ function updateSeries() {
 
 function calculateTotal() {
     let total = 0;
-    total += parseInt(document.getElementById('sqftPrice').value);
+    const basePrice = parseInt(document.getElementById('sqftPrice').value);
+    
+    // 如果基礎安裝費為 -1，直接顯示現場報價
+    if (basePrice === -1) {
+        document.getElementById('totalPriceDisplay').innerText = "需視機型現場報價";
+        return;
+    }
+
+    total += basePrice;
     total += parseInt(document.getElementById('bracket').value);
     total += parseInt(document.getElementById('drainage').value);
     total += parseInt(document.getElementById('removal').value);
+    total += parseInt(document.getElementById('sealing').value); // 加入封板費
     total += parseInt(document.getElementById('floorLevel').value);
     
     // 銅管計算
@@ -129,16 +155,11 @@ function contactLine() {
     
     if(!name) { alert("請填寫姓名"); return; }
 
-    // 這裡串接到 Google Form (請替換為您的 Google Form Entry ID)
     const googleFormUrl = `https://docs.google.com/forms/d/e/您的表單ID/viewform?entry.12345=${name}&entry.67890=${brand}_${series}`;
-    
-    // LINE 訊息文字
     const lineMsg = `您好，我想預約師傅諮詢！%0A姓名：${name}%0A預約品牌：${brand} ${series}%0A初步估價：${total}%0A請協助確認報價。`;
     
-    // 先打開 LINE，再於背景或提示用戶填寫表單
     window.open(`https://line.me/R/ti/p/@ruo0988r?text=${lineMsg}`, '_blank');
     
-    // 提醒跳轉 Google Form 上傳照片
     if(confirm("基本需求已傳送至 LINE。接下來將導向 Google 表單供您上傳現場照片與詳細地址資訊，是否前往？")) {
         window.location.href = googleFormUrl;
     }
