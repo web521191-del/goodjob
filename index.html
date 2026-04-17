@@ -3,134 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>空調估價與預約系統</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <title>空調工程線上估價系統</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; font-family: "Microsoft JhengHei", sans-serif; }
-        .container { max-width: 600px; margin-top: 30px; margin-bottom: 50px; }
-        .card { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 25px; }
-        .step { display: none; }
-        .step.active { display: block; }
-        .btn-next { background-color: #007bff; color: white; width: 100%; margin-top: 20px; }
-        .btn-line { background-color: #00b900; color: white; width: 100%; margin-top: 20px; font-weight: bold; }
-        label { font-weight: bold; margin-top: 10px; }
+        .step-container { display: none; background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .active { display: block; }
+        .btn-line { background-color: #06C755; color: white; }
+        .btn-line:hover { background-color: #05a346; color: white; }
+        .price-display { font-size: 1.5rem; color: #d9534f; font-weight: bold; }
     </style>
 </head>
-<body>
+<body class="py-5">
 
-<div class="container">
-    <div class="card">
-        <h2 class="text-center mb-4">空調專業估價</h2>
-        
-        <div id="step1" class="step active">
-            <h5>1. 基本需求填寫</h5>
-            <label>服務類型</label>
+<div class="container" style="max-width: 800px;">
+    <h2 class="text-center mb-4">空調安裝線上估價</h2>
+    
+    <div id="step1" class="step-container active">
+        <h4 class="mb-3">第一步：基本需求</h4>
+        <div class="mb-3">
+            <label class="form-label">服務類型</label>
             <select class="form-select" id="serviceType">
-                <option>安裝</option><option>拆、移機</option>
+                <option value="安裝">1. 安裝</option>
+                <option value="拆移機">2. 拆、移機</option>
             </select>
-
-            <label>冷氣類型</label>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">冷氣類型</label>
             <select class="form-select" id="acType">
-                <option>分離式變頻空調冷氣</option><option>窗型變頻空調冷氣</option>
+                <option value="分離式">1. 分離式變頻空調冷氣</option>
+                <option value="窗型">2. 窗型變頻空調冷氣</option>
             </select>
-
-            <label>預計安裝坪數</label>
-            <select class="form-select" id="roomSize"></select>
-
-            <label>室外機架</label>
-            <select class="form-select" id="acBracket">
-                <option value="0">不需架子(落地)</option>
-                <option value="1000">室外機L架(鍍鋅)+1,000</option>
-                <option value="2000">室外機L架(白鐵)+2,000</option>
-                <option value="2000">室外機豪華H架(鍍鋅)+2,000</option>
-                <option value="3000">室外機豪華H架(白鐵)+3,000</option>
-                <option value="800">室外機落地架(塑鋼)+800</option>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">預計安裝坪數</label>
+            <select class="form-select" id="sqftPrice"></select>
+        </div>
+        <hr>
+        <h5>額外配件加購</h5>
+        <div class="mb-3">
+            <label class="form-label">室外機架</label>
+            <select class="form-select addon" id="bracket">
+                <option value="0">不需架子(落地) +$0</option>
+                <option value="1000">室外機L架(鍍鋅) +$1,000</option>
+                <option value="2000">室外機L架(白鐵) +$2,000</option>
+                <option value="2000">室外機豪華H架(鍍鋅) +$2,000</option>
+                <option value="3000">室外機豪華H架(白鐵) +$3,000</option>
+                <option value="800">室外機落地架(塑鋼) +$800</option>
             </select>
-
-            <label>室內機排水器</label>
-            <select class="form-select" id="drainPump">
-                <option value="0">不需要</option>
-                <option value="2800">室內機靜音排水器+2,800</option>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">室內機排水器</label>
+            <select class="form-select addon" id="drainage">
+                <option value="0">不需排水器</option>
+                <option value="2800">室內機靜音排水器 +$2,800</option>
             </select>
-
-            <label>超出標配銅管 (米)</label>
-            <select class="form-select" id="copperPipe">
-                <option value="0">不需超出</option>
-                <option value="450">2分/3分 ($450/米)</option>
-                <option value="550">2分/4分 ($550/米)</option>
-                <option value="650">2分/5分 ($650/米)</option>
-            </select>
-
-            <label>舊機拆除 (無安裝新機時)</label>
-            <select class="form-select" id="oldRemove">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">超出標配銅管 (米)</label>
+            <div class="input-group">
+                <select class="form-select" id="pipeType">
+                    <option value="450">2分/3分 ($450/米)</option>
+                    <option value="550">2分/4分 ($550/米)</option>
+                    <option value="650">2分/5分 ($650/米)</option>
+                </select>
+                <input type="number" class="form-control" id="pipeLength" placeholder="輸入超出米數" min="0" value="0">
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">舊機拆除(無安裝新機)</label>
+            <select class="form-select addon" id="removal">
                 <option value="0">不需拆除</option>
-                <option value="1500">窗型冷氣舊機拆除+1,500</option>
-                <option value="1800">分離式冷氣舊機拆除+1,800</option>
+                <option value="1500">窗型冷氣舊機拆除 +$1,500</option>
+                <option value="1800">分離式冷氣舊機拆除 +$1,800</option>
             </select>
-
-            <label>電源線配置 (室外機附近無220V)</label>
-            <select class="form-select" id="powerLine">
-                <option value="0">不需配線</option>
-                <option value="100">電源配線 2.2mm ($100/米)</option>
-                <option value="150">電源配線 3.5mm ($150/米)</option>
-                <option value="180">電源配線 5.5mm ($180/米)</option>
-            </select>
-
-            <label>樓層類型</label>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">電源線配置 (室外機附近無220V)</label>
+            <div class="input-group">
+                <select class="form-select" id="powerType">
+                    <option value="100">2.2mm ($100/米)</option>
+                    <option value="150">3.5mm ($150/米)</option>
+                    <option value="180">5.5mm ($180/米)</option>
+                </select>
+                <input type="number" class="form-control" id="powerLength" placeholder="輸入米數" min="0" value="0">
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">樓層</label>
             <select class="form-select" id="floorType" onchange="updateFloorOptions()">
-                <option value="elevator">電梯大樓</option>
-                <option value="stairs">透天或公寓</option>
+                <option value="elevator">1. 電梯大樓</option>
+                <option value="stairs">2. 透天或公寓(無電梯)</option>
             </select>
-
-            <label>樓層數</label>
-            <select class="form-select" id="floorNumber"></select>
-
-            <label>問題描述</label>
-            <textarea class="form-control" id="description" rows="3" placeholder="請填寫您的具體需求..."></textarea>
-
-            <button class="btn btn-next" onclick="nextStep(2)">下一步：選擇品牌</button>
+            <select class="form-select mt-2" id="floorLevel"></select>
         </div>
-
-        <div id="step2" class="step">
-            <h5>2. 品牌與系列選擇</h5>
-            <label>選擇品牌</label>
-            <select class="form-select" id="brandSelect" onchange="updateSeriesOptions()"></select>
-
-            <label>選擇系列</label>
-            <select class="form-select" id="seriesSelect"></select>
-
-            <button class="btn btn-secondary mt-3 w-100" onclick="prevStep(1)">回上一步</button>
-            <button class="btn btn-next" onclick="nextStep(3)">下一步：預約師傅</button>
+        <div class="mb-3">
+            <label class="form-label">問題描述 (西曬/危險安裝/備註)</label>
+            <textarea class="form-control" id="desc" rows="3"></textarea>
         </div>
+        <button class="btn btn-primary w-100" onclick="nextStep(2)">下一步：選擇品牌</button>
+    </div>
 
-        <div id="step3" class="step">
-            <h5>3. 填寫預約資料</h5>
-            <label>姓名</label>
-            <input type="text" class="form-control" id="userName" required>
-            
-            <label>家用電話</label>
-            <input type="tel" class="form-control" id="telHome">
-            
-            <label>行動電話</label>
-            <input type="tel" class="form-control" id="telMobile" required>
-            
-            <label>地址</label>
-            <input type="text" class="form-control" id="address" required>
-            
-            <label>希望日期 (週日不開放)</label>
-            <input type="date" class="form-control" id="bookDate" onchange="checkSunday(this)">
-            
-            <label>希望時段</label>
-            <select class="form-select" id="bookTime">
-                <option>上午 (09:00 - 12:00)</option>
-                <option>下午 (13:30 - 17:30)</option>
-            
+    <div id="step2" class="step-container">
+        <h4 class="mb-3">第二步：選擇空調品牌與系列</h4>
+        <div class="mb-3">
+            <label class="form-label">品牌</label>
+            <select class="form-select" id="brand" onchange="updateSeries()">
+                <option value="">請選擇品牌</option>
             </select>
-
-            <p class="text-danger mt-3 small">* 提交後將開啟 LINE 並導向 Google 表單</p>
-            <button class="btn btn-line" onclick="submitToAll()">聯絡客服確認品牌型號報價</button>
-            <button class="btn btn-secondary mt-2 w-100" onclick="prevStep(2)">回上一步</button>
         </div>
+        <div class="mb-3">
+            <label class="form-label">系列</label>
+            <select class="form-select" id="series"></select>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-secondary w-100" onclick="prevStep(1)">上一步</button>
+            <button class="btn btn-primary w-100" onclick="nextStep(3)">下一步：填寫預約資料</button>
+        </div>
+    </div>
+
+    <div id="step3" class="step-container">
+        <h4 class="mb-3">第三步：聯絡預約</h4>
+        <div class="alert alert-info">
+            預估安裝費用：<span id="totalPriceDisplay" class="price-display">$0</span>
+            <br><small>*此費用為初步估算，實際報價以現場為準。</small>
+        </div>
+        <form id="appointmentForm">
+            <div class="mb-3"><label class="form-label">姓名</label><input type="text" class="form-control" id="userName" required></div>
+            <div class="mb-3"><label class="form-label">家用電話</label><input type="tel" class="form-control" id="tel"></div>
+            <div class="mb-3"><label class="form-label">行動電話</label><input type="tel" class="form-control" id="phone" required></div>
+            <div class="mb-3"><label class="form-label">地址</label><input type="text" class="form-control" id="address" required></div>
+            <div class="mb-3">
+                <label class="form-label">希望日期 (週日不開放)</label>
+                <input type="date" class="form-control" id="prefDate" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">希望時段</label>
+                <select class="form-select" id="prefTime">
+                    <option>上午 (09:00 - 12:00)</option>
+                    <option>下午 (13:30 - 17:30)</option>
+                    <option>晚上 (18:00 - 20:00)</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">上傳照片 (請於提交後在 Google 表單內上傳)</label>
+                <p class="text-muted small">請點擊下方按鈕，系統將引導至表單完成最後預約。</p>
+            </div>
+            
+            <div class="d-grid gap-2">
+                <button type="button" class="btn btn-line btn-lg" onclick="contactLine()">
+                    💬 聯絡客服確認品牌型號報價
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="prevStep(2)">返回修改</button>
+            </div>
+        </form>
     </div>
 </div>
 
