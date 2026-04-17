@@ -1,133 +1,102 @@
+// 數據載入 (對應附件 CSV)
+const pricingData = [
+    { range: "2坪內", kw: "2.2", split: 4500, window: 1500 },
+    { range: "2~4坪", kw: "2.8", split: 4500, window: 1800 },
+    { range: "4~6坪", kw: "3.6", split: 5000, window: 2000 },
+    { range: "6~7坪", kw: "4.1", split: 5500, window: 2500 },
+    { range: "8~9坪", kw: "5.0", split: 6000, window: 2800 },
+    { range: "9~10坪", kw: "6.3", split: 6000, window: 3000 },
+    { range: "10~12坪", kw: "7.1~8.0", split: 7000, window: 3500 }
+];
 
-// 冷氣估價系統 核心邏輯
-let currentData = {
-    area: 5,
-    isWest: false,
-    isTop: false,
-    suggestKW: 2.8,
-    bracketPrice: 0,
-    holeQty: 0,
-    pipeQty: 0,
-    brandName: '日立 Hitachi',
-    brandFactor: 1.1
-};
+const accessoryData = [
+    { name: "室外機L架(白鐵)", price: 2000 },
+    { name: "牆壁洗孔(磚牆)", price: 1000 },
+    { name: "室內機排水器", price: 2500 },
+    { name: "電源配線(每米)", price: 100 }
+];
 
-// 1. 初始化監聽
-document.getElementById('input-area').addEventListener('input', function(e) {
-    currentData.area = parseInt(e.target.value);
-    document.getElementById('display-area').innerText = currentData.area;
-    updateCalculation();
-});
+// 初始化選單
+window.onload = () => {
+    const sizeSelect = document.getElementById('sizeRange');
+    pricingData.forEach((item, index) => {
+        sizeSelect.options.add(new Option(item.range + ` (${item.kw}kW)`, index));
+    });
 
-// 2. 切換多選選項 (西曬、頂樓)
-function toggleOption(el, type) {
-    el.classList.toggle('active');
-    if (type === 'west') currentData.isWest = !currentData.isWest;
-    if (type === 'top') currentData.isTop = !currentData.isTop;
-    updateCalculation();
-}
+    const accDiv = document.getElementById('accessoryList');
+    accessoryData.forEach((item, index) => {
+        accDiv.innerHTML += `
+            <div class="form-check">
+                <input class="form-check-input acc-item" type="checkbox" value="${item.price}" data-name="${item.name}" id="acc${index}">
+                <label class="form-check-label" for="acc${index}">${item.name} (+$${item.price})</label>
+            </div>`;
+    });
 
-// 3. 單選選項 (架子)
-function selectSingle(el, type, price) {
-    const parent = el.parentElement;
-    parent.querySelectorAll('.option-card').forEach(card => card.classList.remove('active'));
-    el.classList.add('active');
-    
-    if (type === 'bracket') currentData.bracketPrice = price;
-    updateCalculation();
-}
-
-// 4. 品牌選擇
-function selectBrand(el, name, factor) {
-    const parent = el.parentElement;
-    parent.querySelectorAll('.option-card').forEach(card => card.classList.remove('active'));
-    el.classList.add('active');
-    
-    currentData.brandName = name;
-    currentData.brandFactor = factor;
-    updateCalculation();
-}
-
-// 5. 數量增減
-function changeQty(type, delta) {
-    if (type === 'hole') {
-        currentData.holeQty = Math.max(0, currentData.holeQty + delta);
-        document.getElementById('qty-hole').innerText = currentData.holeQty;
-    }
-    if (type === 'pipe') {
-        currentData.pipeQty = Math.max(0, currentData.pipeQty + delta);
-        document.getElementById('qty-pipe').innerText = currentData.pipeQty;
-    }
-    updateCalculation();
-}
-
-// 6. 核心計算邏輯
-function updateCalculation() {
-    // A. 計算建議 kW (基本 0.52kW/坪)
-    let kw = currentData.area * 0.52;
-    if (currentData.isWest) kw *= 1.2;
-    if (currentData.isTop) kw *= 1.2;
-    currentData.suggestKW = kw.toFixed(1);
-    document.getElementById('suggest-kw').innerText = currentData.suggestKW;
-
-    // B. 機器與標安基準價 (以 2.8kW 為例標安約 22000 起，隨品牌調整)
-    const baseMachinePrice = (currentData.suggestKW * 8000) + 10000;
-    const finalMachinePrice = baseMachinePrice * currentData.brandFactor;
-
-    // C. 施工額外費用
-    const extraPrice = currentData.bracketPrice + (currentData.holeQty * 1000) + (currentData.pipeQty * 500);
-
-    // D. 總計
-    const total = finalMachinePrice + extraPrice;
-    document.getElementById('total-price').innerText = Math.round(total).toLocaleString();
-}
-
-// 7. 步驟切換
-function nextStep(step) {
-    document.querySelectorAll('.step-content').forEach(s => s.classList.remove('active'));
-    document.getElementById('step-' + step).classList.add('active');
-    
-    // 更新指標樣式
-    document.querySelectorAll('.step-indicator').forEach((ind, index) => {
-        if (index + 1 === step) {
-            ind.classList.add('text-blue-600', 'font-bold');
-            ind.classList.remove('text-gray-400');
-        } else if (index + 1 < step) {
-            ind.classList.add('text-green-500');
-            ind.classList.remove('text-blue-600', 'font-bold');
-        } else {
-            ind.classList.add('text-gray-400');
-            ind.classList.remove('text-blue-600', 'font-bold', 'text-green-500');
+    // 限制週日不可選
+    const dateInput = document.getElementById('bookDate');
+    dateInput.addEventListener('input', (e) => {
+        const day = new Date(e.target.value).getUTCDay();
+        if (day === 0) {
+            alert('週日無法預約，請選擇其他日期');
+            e.target.value = '';
         }
     });
+};
+
+function goToPage(pageNum) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(`page${pageNum}`).classList.add('active');
+    if (pageNum === 2) calculateQuote();
 }
 
-// 8. 顯示報價單
-function showSummary() {
-    const list = document.getElementById('summary-list');
-    const total = document.getElementById('total-price').innerText;
+function calculateQuote() {
+    const acType = document.getElementById('acType').value;
+    const sizeIdx = document.getElementById('sizeRange').value;
+    const selectedData = pricingData[sizeIdx];
     
-    list.innerHTML = `
-        <div class="flex justify-between border-b pb-2"><span>安裝空間</span> <span>${currentData.area} 坪</span></div>
-        <div class="flex justify-between border-b pb-2"><span>建議能力</span> <span>${currentData.suggestKW} kW</span></div>
-        <div class="flex justify-between border-b pb-2"><span>選用品牌</span> <span>${currentData.brandName}</span></div>
-        <div class="flex justify-between border-b pb-2"><span>架子費用</span> <span>$${currentData.bracketPrice.toLocaleString()}</span></div>
-        <div class="flex justify-between border-b pb-2"><span>洗孔費用 (${currentData.holeQty}孔)</span> <span>$${(currentData.holeQty * 1000).toLocaleString()}</span></div>
-        <div class="flex justify-between border-b pb-2"><span>超出銅管 (${currentData.pipeQty}米)</span> <span>$${(currentData.pipeQty * 500).toLocaleString()}</span></div>
-        <div class="flex justify-between pt-4 text-xl font-bold text-orange-600">
-            <span>總計預算</span> <span>NT$ ${total}</span>
-        </div>
-        <p class="text-[10px] text-gray-400 mt-4 text-center">* 此為系統初步估算，實際價格依師傅現場勘查為準。</p>
+    let basePrice = acType === '分離式' ? selectedData.split : selectedData.window;
+    let accPrice = 0;
+    let accNames = [];
+
+    document.querySelectorAll('.acc-item:checked').forEach(el => {
+        accPrice += parseInt(el.value);
+        accNames.push(el.getAttribute('data-name'));
+    });
+
+    const total = basePrice + accPrice;
+    document.getElementById('quoteDetail').innerHTML = `
+        <p>基本安裝費 (${acType}): $${basePrice}</p>
+        <p>配件費用: $${accPrice} (${accNames.join(', ') || '無'})</p>
+        <p class="fw-bold">預估總計: <span class="text-danger">$${total}</span></p>
+        <small>* 此價格僅為基本預估，實際依現場師傅報價為準。</small>
     `;
-    
-    document.getElementById('modal-summary').classList.remove('hidden');
-    document.getElementById('modal-summary').classList.add('flex');
+
+    // 品牌推薦模擬 (實際可根據 kW 數篩選)
+    document.getElementById('recommendations').innerHTML = `
+        <div class="col-6 mb-2"><div class="p-2 border rounded text-center">Panasonic ${selectedData.kw}kW<br>$2X,XXX</div></div>
+        <div class="col-6 mb-2"><div class="p-2 border rounded text-center">Daikin ${selectedData.kw}kW<br>$3X,XXX</div></div>
+    `;
 }
 
-function closeModal() {
-    document.getElementById('modal-summary').classList.add('hidden');
-    document.getElementById('modal-summary').classList.remove('flex');
+// 串接 LINE
+function submitToLine() {
+    const message = encodeURIComponent(
+        `【空調預約需求】\n` +
+        `客戶：${document.getElementById('userName').value}\n` +
+        `電話：${document.getElementById('mobilePhone').value}\n` +
+        `地址：${document.getElementById('address').value}\n` +
+        `需求：${document.getElementById('serviceType').value} - ${document.getElementById('acType').value}\n` +
+        `預約時間：${document.getElementById('bookDate').value} ${document.getElementById('bookTime').value}\n` +
+        `備註：${document.getElementById('description').value}`
+    );
+    // 替換為你的 LINE ID 連結
+    window.location.href = `https://line.me/R/oaMessage/@你的LINEID/?${message}`;
 }
 
-// 啟動首次計算
-updateCalculation();
+// 串接 Google 表單 (需先建立表單並獲取 entry ID)
+function submitToGoogle() {
+    const formUrl = "https://docs.google.com/forms/d/e/你的表單ID/viewform";
+    // 透過 URL 參數自動填寫部分內容 (選填)
+    const query = `?usp=pp_url&entry.123456=${document.getElementById('userName').value}`;
+    window.open(formUrl + query, '_blank');
+}
