@@ -1,15 +1,10 @@
 // --- 資料定義 ---
-const pricingData = [
-    { range: "2坪內", kw: "2.2 kW", split: 4500, window: 1500 },
-    { range: "2~4 坪", kw: "2.8 kW", split: 4500, window: 1800 },
-    { range: "4~6 坪", kw: "3.6 kW", split: 5000, window: 2000 },
-    { range: "6~7 坪", kw: "4.1kW", split: 5500, window: 2500 },
-    { range: "8~9 坪", kw: "5.0kW", split: 6000, window: 2800 },
-    { range: "9~10 坪", kw: "6.3 kW", split: 6000, window: 3000 },
-    { range: "10~12 坪", kw: "7.1 ~ 8.0 kW", split: 7000, window: 3500 },
-    { range: "12~15 坪", kw: "9.0 kW", split: 9000, window: -1 },
-    { range: "15~18 坪", kw: "11kW", split: 12000, window: -1 },
-    { range: "18~20 坪", kw: "14kW", split: -1, window: -1 }
+const pricingTable = [
+    { label: "2-3 坪 ($12,000)", value: 12000 },
+    { label: "3-5 坪 ($15,000)", value: 15000 },
+    { label: "5-7 坪 ($20,000)", value: 20000 },
+    { label: "7-9 坪 ($25,000)", value: 25000 }
+    // 請根據您的附件繼續增加...
 ];
 
 const brands = {
@@ -28,7 +23,16 @@ const brands = {
 
 // --- 初始化頁面 ---
 document.addEventListener("DOMContentLoaded", () => {
-    updateSqftOptions();
+    // 填充坪數選單
+    const sqftSelect = document.getElementById('sqftPrice');
+    pricingTable.forEach(item => {
+        let opt = document.createElement('option');
+        opt.value = item.value;
+        opt.innerHTML = item.label;
+        sqftSelect.appendChild(opt);
+    });
+
+    // 填充品牌選單
     const brandSelect = document.getElementById('brand');
     for (let b in brands) {
         let opt = document.createElement('option');
@@ -37,32 +41,82 @@ document.addEventListener("DOMContentLoaded", () => {
         brandSelect.appendChild(opt);
     }
     updateFloorOptions();
+    
+    // 禁止選取週日
+    const datePicker = document.getElementById('prefDate');
+    datePicker.addEventListener('input', function(e){
+        var day = new Date(this.value).getUTCDay();
+        if([0].includes(day)){
+            e.preventDefault();
+            this.value = '';
+            alert('週日無法預約，請選擇其他日期');
+        }
+    });
 });
 
 // --- 功能函數 ---
-function updateSqftOptions() {
-    const acType = document.getElementById('acType').value;
-    const sqftSelect = document.getElementById('sqftPrice');
-    sqftSelect.innerHTML = '';
-    pricingData.forEach(item => {
-        const price = (acType === 'split') ? item.split : item.window;
-        let opt = document.createElement('option');
-        opt.value = price;
-        opt.innerHTML = (price === -1) ? `${item.range} (${item.kw}) - 需視機型現場報價` : `${item.range} (${item.kw}) - $${price.toLocaleString()}`;
-        sqftSelect.appendChild(opt);
-    });
+function nextStep(step) {
+    document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
+    document.getElementById('step' + step).classList.add('active');
+    if(step === 3) calculateTotal();
+}
+
+function prevStep(step) {
+    document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
+    document.getElementById('step' + step).classList.add('active');
+}
+
+function updateFloorOptions() {
+    const type = document.getElementById('floorType').value;
+    const levelSelect = document.getElementById('floorLevel');
+    levelSelect.innerHTML = '';
+    if (type === 'elevator') {
+        for (let i = 1; i <= 30; i++) {
+            let opt = document.createElement('option');
+            opt.value = 0; // 電梯不加價
+            opt.innerHTML = i + " 樓";
+            levelSelect.appendChild(opt);
+        }
+    } else {
+        for (let i = 2; i <= 10; i++) {
+            let opt = document.createElement('option');
+            opt.value = (i - 1) * 100; // 每一層 +100 (假設從2樓開始算每一單位)
+            opt.innerHTML = i + " 樓 (加收 " + opt.value + ")";
+            levelSelect.appendChild(opt);
+        }
+    }
+}
+
+function updateSeries() {
+    const brand = document.getElementById('brand').value;
+    const seriesSelect = document.getElementById('series');
+    seriesSelect.innerHTML = '';
+    if (brands[brand]) {
+        brands[brand].forEach(s => {
+            let opt = document.createElement('option');
+            opt.value = s;
+            opt.innerHTML = s;
+            seriesSelect.appendChild(opt);
+        });
+    }
 }
 
 function calculateTotal() {
     let total = 0;
-    const basePrice = parseInt(document.getElementById('sqftPrice').value);
-    if (basePrice === -1) {
-        document.getElementById('totalPriceDisplay').innerText = "需視機型現場報價";
-        return;
-    }
-    total += basePrice + parseInt(document.getElementById('bracket').value) + parseInt(document.getElementById('drainage').value) + parseInt(document.getElementById('removal').value) + parseInt(document.getElementById('sealing').value) + parseInt(document.getElementById('floorLevel').value);
-    total += (parseInt(document.getElementById('pipeLength').value) || 0) * parseInt(document.getElementById('pipeType').value);
-    total += (parseInt(document.getElementById('powerLength').value) || 0) * parseInt(document.getElementById('powerType').value);
+    total += parseInt(document.getElementById('sqftPrice').value);
+    total += parseInt(document.getElementById('bracket').value);
+    total += parseInt(document.getElementById('drainage').value);
+    total += parseInt(document.getElementById('removal').value);
+    total += parseInt(document.getElementById('floorLevel').value);
+    
+    // 銅管計算
+    let pLen = parseInt(document.getElementById('pipeLength').value) || 0;
+    total += pLen * parseInt(document.getElementById('pipeType').value);
+    
+    // 電源線計算
+    let powLen = parseInt(document.getElementById('powerLength').value) || 0;
+    total += powLen * parseInt(document.getElementById('powerType').value);
+
     document.getElementById('totalPriceDisplay').innerText = "$" + total.toLocaleString();
     return total;
 }
@@ -73,19 +127,19 @@ function contactLine() {
     const series = document.getElementById('series').value;
     const total = document.getElementById('totalPriceDisplay').innerText;
     
-    // 請將下方的 entry.xxxx 替換成您從「取得預填連結」拿到的其他正確 ID
-    const googleFormUrl = `https://docs.google.com/forms/d/e/1FAIpQLScMZgUu5gs9klhSgyTSUmgYit9DASDnZSthlidPyEtwGC1eXQ/viewform?usp=pp_url` +
-                          `&entry.1407722231=${encodeURIComponent(name)}` + 
-                          `&entry.1407722231=${encodeURIComponent(brand + ' ' + series)}` +
-                          `&entry.1407722231=${encodeURIComponent(total)}`;
+    if(!name) { alert("請填寫姓名"); return; }
+
+    // 這裡串接到 Google Form (請替換為您的 Google Form Entry ID)
+    const googleFormUrl = `https://docs.google.com/forms/d/e/您的表單ID/viewform?entry.12345=${name}&entry.67890=${brand}_${series}`;
     
+    // LINE 訊息文字
     const lineMsg = `您好，我想預約師傅諮詢！%0A姓名：${name}%0A預約品牌：${brand} ${series}%0A初步估價：${total}%0A請協助確認報價。`;
     
+    // 先打開 LINE，再於背景或提示用戶填寫表單
     window.open(`https://line.me/R/ti/p/@ruo0988r?text=${lineMsg}`, '_blank');
     
-    if(confirm("基本需求已傳送至 LINE。接下來將導向 Google 表單，請於表單頁面上傳現場照片並確認資訊，是否前往？")) {
+    // 提醒跳轉 Google Form 上傳照片
+    if(confirm("基本需求已傳送至 LINE。接下來將導向 Google 表單供您上傳現場照片與詳細地址資訊，是否前往？")) {
         window.location.href = googleFormUrl;
     }
 }
-
-// 保持原本的 nextStep, prevStep, updateSeries, updateFloorOptions 函數不變...
