@@ -121,25 +121,29 @@ function calculateTotal() {
     return total;
 }
 
-function contactLine() {
-    const name = document.getElementById('userName').value;
-    const brand = document.getElementById('brand').value;
-    const series = document.getElementById('series').value;
-    const total = document.getElementById('totalPriceDisplay').innerText;
-    
-    if(!name) { alert("請填寫姓名"); return; }
+function submitFormToGAS() {
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbwSkxZ4ON1mNH9KhKOMfsxQ-Wb9R5hFXBe5RV0kuZIuiyOPD2mXt9zICT3X1ATjnp8zhA/exec
+'; // 
+    const formData = {
+        name: document.getElementById('userName').value,
+        phone: document.getElementById('phone').value,
+        address: document.getElementById('address').value,
+        brandSeries: document.getElementById('brand').value + ' ' + document.getElementById('series').value,
+        total: document.getElementById('totalPriceDisplay').innerText,
+        desc: document.getElementById('desc').value
+    };
 
-    // 這裡串接到 Google Form (請替換為您的 Google Form Entry ID)
-    const googleFormUrl = `https://docs.google.com/forms/d/e/您的表單ID/viewform?entry.12345=${name}&entry.67890=${brand}_${series}`;
-    
-    // LINE 訊息文字
-    const lineMsg = `您好，我想預約師傅諮詢！%0A姓名：${name}%0A預約品牌：${brand} ${series}%0A初步估價：${total}%0A請協助確認報價。`;
-    
-    // 先打開 LINE，再於背景或提示用戶填寫表單
+    // 1. 發送 LINE
+    const lineMsg = `您好，我想預約師傅諮詢！%0A姓名：${formData.name}%0A品牌型號：${formData.brandSeries}%0A初步估價：${formData.total}`;
     window.open(`https://line.me/R/ti/p/@ruo0988r?text=${lineMsg}`, '_blank');
-    
-    // 提醒跳轉 Google Form 上傳照片
-    if(confirm("基本需求已傳送至 LINE。接下來將導向 Google 表單供您上傳現場照片與詳細地址資訊，是否前往？")) {
-        window.location.href = googleFormUrl;
-    }
-}
+
+    // 2. 使用 fetch 發送到 GAS
+    fetch(scriptUrl, {
+        method: 'POST',
+        mode: 'no-cors', // 處理跨域限制
+        body: new URLSearchParams(formData)
+    }).then(() => {
+        alert("資料已成功傳送至系統！");
+        // 可選擇是否重置表單
+    });
+}}
