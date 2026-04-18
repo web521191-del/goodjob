@@ -36,14 +36,14 @@
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">預計安裝坪數</label>
+            <label class="form-label">預計安裝坪數 (標配安裝費)</label>
             <select class="form-select" id="sqftPrice"></select>
         </div>
         <hr>
         <h5>額外配件加購</h5>
         <div class="mb-3">
             <label class="form-label">室外機架</label>
-            <select class="form-select" id="bracket">
+            <select class="form-select addon" id="bracket">
                 <option value="0">不需架子(落地) +$0</option>
                 <option value="1000">室外機L架(鍍鋅) +$1,000</option>
                 <option value="2000">室外機L架(白鐵) +$2,000</option>
@@ -54,7 +54,7 @@
         </div>
         <div class="mb-3">
             <label class="form-label">室內機排水器</label>
-            <select class="form-select" id="drainage">
+            <select class="form-select addon" id="drainage">
                 <option value="0">不需排水器</option>
                 <option value="2800">室內機靜音排水器 +$2,800</option>
             </select>
@@ -67,23 +67,34 @@
                     <option value="550">2分/4分 ($550/米)</option>
                     <option value="650">2分/5分 ($650/米)</option>
                 </select>
-                <input type="number" class="form-control" id="pipeLength" value="0">
+                <input type="number" class="form-control" id="pipeLength" placeholder="輸入超出米數" min="0" value="0">
             </div>
         </div>
         <div class="mb-3">
-            <label class="form-label">舊機拆除 (新機含免費拆除)</label>
-            <select class="form-select" id="removal">
+            <label class="form-label">舊機拆除(無安裝新機必選,新機含免費拆除)</label>
+            <select class="form-select addon" id="removal">
                 <option value="0">不需拆除</option>
-                <option value="1500">窗型舊機拆除 +$1,500</option>
-                <option value="1800">分離式舊機拆除 +$1,800</option>
+                <option value="1500">窗型冷氣舊機拆除 +$1,500</option>
+                <option value="1800">分離式冷氣舊機拆除 +$1,800</option>
             </select>
         </div>
         <div class="mb-3">
             <label class="form-label">舊機拆除需要封板</label>
-            <select class="form-select" id="sealing">
+            <select class="form-select addon" id="sealing">
                 <option value="0">不需封窗</option>
                 <option value="800">塑鋁板封窗 +$800</option>
             </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">電源線配置 (室外機附近無220V)</label>
+            <div class="input-group">
+                <select class="form-select" id="powerType">
+                    <option value="100">2.2mm ($100/米)</option>
+                    <option value="150">3.5mm ($150/米)</option>
+                    <option value="180">5.5mm ($180/米)</option>
+                </select>
+                <input type="number" class="form-control" id="powerLength" placeholder="輸入米數" min="0" value="0">
+            </div>
         </div>
         <div class="mb-3">
             <label class="form-label">樓層</label>
@@ -92,6 +103,10 @@
                 <option value="stairs">2. 透天或公寓(無電梯)</option>
             </select>
             <select class="form-select mt-2" id="floorLevel"></select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">問題描述 (西曬/危險安裝/備註)</label>
+            <textarea class="form-control" id="desc" rows="3"></textarea>
         </div>
         <button class="btn btn-primary w-100" onclick="nextStep(2)">下一步：選擇品牌</button>
     </div>
@@ -110,7 +125,7 @@
         </div>
         <div class="d-flex gap-2">
             <button class="btn btn-secondary w-100" onclick="prevStep(1)">上一步</button>
-            <button class="btn btn-primary w-100" onclick="nextStep(3)">下一步：填寫預約</button>
+            <button class="btn btn-primary w-100" onclick="nextStep(3)">下一步：填寫預約資料</button>
         </div>
     </div>
 
@@ -118,22 +133,46 @@
         <h4 class="mb-3">第三步：聯絡預約</h4>
         <div class="alert alert-info">
             預估安裝費用：<span id="totalPriceDisplay" class="price-display">$0</span>
+            <br><small>*此費用為初步估算，實際報價以現場為準。</small>
         </div>
-        <div class="mb-3"><label>姓名</label><input type="text" class="form-control" id="userName"></div>
-        <div class="mb-3"><label>手機</label><input type="tel" class="form-control" id="phone"></div>
-        <div class="mb-3"><label>地址</label><input type="text" class="form-control" id="address"></div>
-        <div class="mb-3"><label>日期</label><input type="date" class="form-control" id="prefDate"></div>
-        
-        <div class="d-grid gap-2">
-      
+        <form id="appointmentForm">
+            <div class="mb-3"><label class="form-label">姓名</label><input type="text" class="form-control" id="userName" required></div>
+            <div class="mb-3"><label class="form-label">家用電話</label><input type="tel" class="form-control" id="tel"></div>
+            <div class="mb-3"><label class="form-label">行動電話</label><input type="tel" class="form-control" id="phone" required></div>
+            <div class="mb-3"><label class="form-label">地址</label><input type="text" class="form-control" id="address" required></div>
+            <div class="mb-3">
+                <label class="form-label">希望日期 (週日不開放)</label>
+                <input type="date" class="form-control" id="prefDate" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">希望時段</label>
+                <select class="form-select" id="prefTime">
+                    <option>上午 (09:00 - 12:00)</option>
+                    <option>下午 (13:30 - 17:30)</option>
+                    <option>晚上 (18:00 - 20:00)</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">上傳照片 (請於提交後在 Google 表單內上傳)</label>
+<div class="d-grid gap-2">
     <button type="button" class="btn btn-line btn-lg" onclick="window.open(contactLine(), '_blank')">
         ✅ 確認提交資料並前往上傳照片
     </button>
-            <button type="button" class="btn btn-line" onclick="contactLine()">💬 聯絡客服</button>
-            <button type="button" class="btn btn-outline-secondary" onclick="prevStep(2)">返回修改</button>
-        </div>
+    <button type="button" class="btn btn-outline-secondary" onclick="prevStep(2)">返回修改</button>
+</div>
+                <p class="text-muted small">請點擊下方按鈕，系統將引導至表單完成最後預約。</p>
+            </div>
+            
+            <div class="d-grid gap-2">
+                <button type="button" class="btn btn-line btn-lg" onclick="contactLine()">
+                    💬 聯絡客服確認品牌型號報價
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="prevStep(2)">返回修改</button>
+            </div>
+        </form>
     </div>
 </div>
+
 <script src="script.js"></script>
 </body>
 </html>
