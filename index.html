@@ -30,13 +30,13 @@
         </div>
         <div class="mb-3">
             <label class="form-label">冷氣類型</label>
-            <select class="form-select" id="acType">
-                <option value="分離式">1. 分離式變頻空調冷氣</option>
-                <option value="窗型">2. 窗型變頻空調冷氣</option>
+            <select class="form-select" id="acType" onchange="updateSqftOptions()">
+                <option value="split">1. 分離式變頻空調冷氣</option>
+                <option value="window">2. 窗型變頻空調冷氣</option>
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label">預計安裝坪數</label>
+            <label class="form-label">預計安裝坪數 (標配安裝費)</label>
             <select class="form-select" id="sqftPrice"></select>
         </div>
         <hr>
@@ -71,11 +71,18 @@
             </div>
         </div>
         <div class="mb-3">
-            <label class="form-label">舊機拆除(無安裝新機)</label>
+            <label class="form-label">舊機拆除(無安裝新機必選,新機含免費拆除)</label>
             <select class="form-select addon" id="removal">
                 <option value="0">不需拆除</option>
                 <option value="1500">窗型冷氣舊機拆除 +$1,500</option>
                 <option value="1800">分離式冷氣舊機拆除 +$1,800</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">舊機拆除需要封板</label>
+            <select class="form-select addon" id="sealing">
+                <option value="0">不需封窗</option>
+                <option value="800">塑鋁板封窗 +$800</option>
             </select>
         </div>
         <div class="mb-3">
@@ -151,9 +158,9 @@
             </div>
             
             <div class="d-grid gap-2">
-               <button type="button" class="btn btn-line btn-lg" onclick="submitFormToGAS()">
-    ✅ 確認提交預約資料
-</button>
+                <button type="button" class="btn btn-line btn-lg" onclick="contactLine()">
+                    💬 聯絡客服確認品牌型號報價
+                </button>
                 <button type="button" class="btn btn-outline-secondary" onclick="prevStep(2)">返回修改</button>
             </div>
         </form>
