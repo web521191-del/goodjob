@@ -48,19 +48,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 禁止選擇週日
     const dateInput = document.getElementById("bookDate");
-    dateInput.addEventListener("input", (e) => {
-        const day = new Date(e.target.value).getUTCDay();
-        if (day === 0) {
-            alert("週日無法預約，請選擇其他日期");
-            e.target.value = "";
-        }
-    });
+    if(dateInput){
+        dateInput.addEventListener("input", (e) => {
+            const day = new Date(e.target.value).getUTCDay();
+            if (day === 0) {
+                alert("週日無法預約，請選擇其他日期");
+                e.target.value = "";
+            }
+        });
+    }
 
     document.getElementById("estimationForm").addEventListener("change", calculateTotal);
     document.querySelectorAll("input").forEach(input => input.addEventListener("input", calculateTotal));
 });
 
-// 1. 更新樓層上限邏輯
 function updateFloorLimit() {
     const buildingType = document.getElementById("buildingType").value;
     const floorInput = document.getElementById("floor");
@@ -71,10 +72,9 @@ function updateFloorLimit() {
     } else {
         floorInput.max = 30;
     }
-    calculateTotal(); // 重新計算費用
+    calculateTotal();
 }
 
-// 2. 驗證圖片數量
 function validateFiles(input) {
     if (input.files.length > 5) {
         alert("最多只能上傳 5 張照片！");
@@ -83,7 +83,6 @@ function validateFiles(input) {
 }
 
 function nextStep(n) {
-    // 在進入下一步前可加入簡單驗證
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
     document.getElementById('step' + n).classList.add('active');
     window.scrollTo(0, 0);
@@ -114,30 +113,27 @@ function calculateTotal() {
     const form = document.getElementById("estimationForm");
     const formData = new FormData(form);
 
-    // 1. 基本安裝費
     const acType = formData.get("acType");
     const priceIdx = formData.get("areaSize");
-    const basePrice = (acType === "分離式變頻空調冷氣") 
-        ? priceData[priceIdx].splitPrice 
-        : priceData[priceIdx].windowPrice;
-    total += basePrice;
+    if(priceIdx !== null) {
+        const basePrice = (acType === "分離式變頻空調冷氣") 
+            ? priceData[priceIdx].splitPrice 
+            : priceData[priceIdx].windowPrice;
+        total += basePrice;
+    }
 
-    // 2. 配件費
     total += parseInt(form.bracket.options[form.bracket.selectedIndex].dataset.price || 0);
     total += parseInt(form.drainPump.options[form.drainPump.selectedIndex].dataset.price || 0);
     total += parseInt(form.oldRemoval.options[form.oldRemoval.selectedIndex].dataset.price || 0);
 
-    // 3. 銅管費
     const pipeRate = parseInt(form.extraPipe.options[form.extraPipe.selectedIndex].dataset.price || 0);
     const pipeLen = parseInt(formData.get("pipeLength") || 0);
     total += (pipeRate * pipeLen);
 
-    // 4. 電源線費
     const wireRate = parseInt(form.powerWire.options[form.powerWire.selectedIndex].dataset.price || 0);
     const wireLen = parseInt(formData.get("wireLength") || 0);
     total += (wireRate * wireLen);
 
-    // 5. 修正後的樓層費 (透天或公寓 2樓開始每層+100)
     const building = formData.get("buildingType");
     const floor = parseInt(formData.get("floor") || 1);
     if (building === "透天或公寓" && floor >= 2) {
@@ -147,29 +143,58 @@ function calculateTotal() {
     document.getElementById("totalPrice").textContent = total.toLocaleString();
 }
 
-// 提交邏輯
+// 提交邏輯 (支援圖片上傳與資料彙整)
 document.getElementById("estimationForm").onsubmit = async (e) => {
     e.preventDefault();
     const submitBtn = e.target.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
-    submitBtn.textContent = "傳送中...";
+    submitBtn.textContent = "資料處理中...";
 
-    const formData = new FormData(e.target);
-    // 注意：圖片檔案無法直接透過 URLSearchParams 傳送到一般的 Apps Script POST
-    // 若要傳圖，Google Apps Script 端需要處理 Base64 編碼，此處先維持原本的文字傳送
+    const form = e.target;
+    const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
+
+    // 額外加入試算表需要的資訊
     data.totalPrice = document.getElementById("totalPrice").textContent;
+    const areaSelect = document.getElementById("areaSize");
+    data.areaSize_text = areaSelect.options[areaSelect.selectedIndex].text;
+
+    // 圖片轉 Base64 處理函數
+    const toBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+
+    // 處理圖片上傳
+    const fileInput = document.getElementById("siteImages");
+    const files = fileInput.files;
+    for (let i = 0; i < files.length; i++) {
+        try {
+            data['file' + (i + 1)] = await toBase64(files[i]);
+        } catch (err) {
+            console.error("圖片轉碼失敗", err);
+        }
+    }
 
     try {
-        const response = await fetch("https://script.google.com/macros/s/AKfycbwSkxZ4ON1mNH9KhKOMfsxQ-Wb9R5hFXBe5RV0kuZIuiyOPD2mXt9zICT3X1ATjnp8zhA/exec", {
+        // 重要：請將下方的網址替換為您部署後獲得的「網頁應用程式網址」
+        const gasUrl = "https://script.google.com/macros/s/AKfycbwSkxZ4ON1mNH9KhKOMfsxQ-Wb9R5hFXBe5RV0kuZIuiyOPD2mXt9zICT3X1ATjnp8zhA/exec"; 
+        
+        await fetch(gasUrl, {
             method: "POST",
             mode: "no-cors",
             body: new URLSearchParams(data)
         });
-        alert("預約資料已送出！我們會盡快聯絡您。");
+        
+        alert("預約資料已成功送出！我們會盡快聯絡您。");
+        form.reset();
+        nextStep(1); 
+        document.getElementById("totalPrice").textContent = "0";
     } catch (error) {
         console.error(error);
-        alert("送出失敗，請檢查網路連線或聯絡客服。");
+        alert("傳送發生錯誤，請聯絡客服。");
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = "完成送出";
