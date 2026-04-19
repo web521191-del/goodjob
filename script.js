@@ -1,4 +1,4 @@
-// 附件資料：坪數與安裝費對照 (根據您上傳的 CSV 內容)
+// 附件資料：坪數與安裝費對照
 const priceData = [
     { size: "2坪內", power: "2.2 kW", splitPrice: 4500, windowPrice: 1500 },
     { size: "2~4 坪", power: "2.8 kW", splitPrice: 4500, windowPrice: 1800 },
@@ -27,7 +27,6 @@ const brandModels = {
     "山田空調": ["FN冷暖系列", "FN冷專系列", "FA系列變頻窗型冷專右吹"]
 };
 
-// 初始化頁面
 document.addEventListener("DOMContentLoaded", () => {
     // 生成坪數選項
     const areaSelect = document.getElementById("areaSize");
@@ -57,19 +56,43 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 監聽所有輸入以更新價格
     document.getElementById("estimationForm").addEventListener("change", calculateTotal);
     document.querySelectorAll("input").forEach(input => input.addEventListener("input", calculateTotal));
 });
 
+// 1. 更新樓層上限邏輯
+function updateFloorLimit() {
+    const buildingType = document.getElementById("buildingType").value;
+    const floorInput = document.getElementById("floor");
+    
+    if (buildingType === "透天或公寓") {
+        floorInput.max = 9;
+        if (parseInt(floorInput.value) > 9) floorInput.value = 9;
+    } else {
+        floorInput.max = 30;
+    }
+    calculateTotal(); // 重新計算費用
+}
+
+// 2. 驗證圖片數量
+function validateFiles(input) {
+    if (input.files.length > 5) {
+        alert("最多只能上傳 5 張照片！");
+        input.value = "";
+    }
+}
+
 function nextStep(n) {
+    // 在進入下一步前可加入簡單驗證
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
     document.getElementById('step' + n).classList.add('active');
+    window.scrollTo(0, 0);
 }
 
 function prevStep(n) {
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
     document.getElementById('step' + n).classList.add('active');
+    window.scrollTo(0, 0);
 }
 
 function updateModels() {
@@ -114,7 +137,7 @@ function calculateTotal() {
     const wireLen = parseInt(formData.get("wireLength") || 0);
     total += (wireRate * wireLen);
 
-    // 5. 樓層費 (公寓2樓開始每層+100)
+    // 5. 修正後的樓層費 (透天或公寓 2樓開始每層+100)
     const building = formData.get("buildingType");
     const floor = parseInt(formData.get("floor") || 1);
     if (building === "透天或公寓" && floor >= 2) {
@@ -124,7 +147,7 @@ function calculateTotal() {
     document.getElementById("totalPrice").textContent = total.toLocaleString();
 }
 
-// 提交到 Google Sheets
+// 提交邏輯
 document.getElementById("estimationForm").onsubmit = async (e) => {
     e.preventDefault();
     const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -132,17 +155,18 @@ document.getElementById("estimationForm").onsubmit = async (e) => {
     submitBtn.textContent = "傳送中...";
 
     const formData = new FormData(e.target);
+    // 注意：圖片檔案無法直接透過 URLSearchParams 傳送到一般的 Apps Script POST
+    // 若要傳圖，Google Apps Script 端需要處理 Base64 編碼，此處先維持原本的文字傳送
     const data = Object.fromEntries(formData.entries());
     data.totalPrice = document.getElementById("totalPrice").textContent;
 
     try {
         const response = await fetch("https://script.google.com/macros/s/AKfycbwSkxZ4ON1mNH9KhKOMfsxQ-Wb9R5hFXBe5RV0kuZIuiyOPD2mXt9zICT3X1ATjnp8zhA/exec", {
             method: "POST",
-            mode: "no-cors", // 注意：Apps Script 通常需要 no-cors
+            mode: "no-cors",
             body: new URLSearchParams(data)
         });
         alert("預約資料已送出！我們會盡快聯絡您。");
-        // 送出後可以跳轉或重置
     } catch (error) {
         console.error(error);
         alert("送出失敗，請檢查網路連線或聯絡客服。");
