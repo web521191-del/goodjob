@@ -180,7 +180,7 @@ document.getElementById("estimationForm").onsubmit = async (e) => {
 
     try {
         // 重要：請將下方的網址替換為您部署後獲得的「網頁應用程式網址」
-        const gasUrl = "https://script.google.com/macros/s/AKfycbwSkxZ4ON1mNH9KhKOMfsxQ-Wb9R5hFXBe5RV0kuZIuiyOPD2mXt9zICT3X1ATjnp8zhA/exec"; 
+        const gasUrl = "https://script.google.com/macros/s/AKfycbzUGaGHqrI5dMrWU0V-Zz9mEFR1B8PVdZS6yxPbEDOkL1gq1nrouCvcwLr4XdlICv1TwQ/exec"; 
         
         await fetch(gasUrl, {
             method: "POST",
