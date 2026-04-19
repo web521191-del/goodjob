@@ -12,6 +12,7 @@
         .card { box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: none; }
         .btn-line { background-color: #00b900; color: white; }
         .btn-line:hover { background-color: #009900; color: white; }
+        .img-preview-hint { font-size: 0.85rem; color: #6c757d; }
     </style>
 </head>
 <body>
@@ -41,8 +42,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">預計安裝坪數</label>
-                    <select class="form-select" id="areaSize" name="areaSize" required>
-                        </select>
+                    <select class="form-select" id="areaSize" name="areaSize" required></select>
                 </div>
 
                 <div class="mb-3">
@@ -99,13 +99,13 @@
                 <div class="mb-3">
                     <label class="form-label">樓層與電梯</label>
                     <div class="row">
-                        <div class="col">
-                            <select class="form-select" id="buildingType" name="buildingType">
-                                <option value="電梯大樓">電梯大樓</option>
+                        <div class="col-7">
+                            <select class="form-select" id="buildingType" name="buildingType" onchange="updateFloorLimit()">
+                                <option value="住宅有電梯/電梯大樓">住宅有電梯/電梯大樓</option>
                                 <option value="透天或公寓">透天或公寓</option>
                             </select>
                         </div>
-                        <div class="col">
+                        <div class="col-5">
                             <input type="number" class="form-control" name="floor" id="floor" min="1" max="30" value="1" placeholder="樓層">
                         </div>
                     </div>
@@ -121,18 +121,28 @@
 
             <div class="step" id="step2">
                 <h4>第二步：品牌與型號</h4>
-                <div class="mb-3">
+                <div class="mb-4">
                     <label class="form-label">品牌</label>
                     <select class="form-select" id="brandSelect" name="brand" onchange="updateModels()">
                         <option value="">請選擇品牌</option>
                     </select>
                 </div>
-                <div class="mb-3">
+                <div class="mb-4">
                     <label class="form-label">系列型號</label>
                     <select class="form-select" id="modelSelect" name="model">
                         <option value="">請先選擇品牌</option>
                     </select>
                 </div>
+
+                <hr>
+                
+                <div class="mb-4">
+                    <h4>安裝環境與舊機現況</h4>
+                    <label class="form-label">上傳現場照片 (最多5張)</label>
+                    <input type="file" class="form-control" id="siteImages" name="siteImages" accept="image/*" multiple onchange="validateFiles(this)">
+                    <div class="img-preview-hint mt-1">* 建議拍攝：安裝位置、室外機放置處、電箱、舊機外觀。</div>
+                </div>
+
                 <div class="row">
                     <div class="col"><button type="button" class="btn btn-secondary w-100" onclick="prevStep(1)">上一步</button></div>
                     <div class="col"><button type="button" class="btn btn-primary w-100" onclick="nextStep(3)">下一步：聯絡資訊</button></div>
