@@ -143,23 +143,23 @@ function calculateTotal() {
     document.getElementById("totalPrice").textContent = total.toLocaleString();
 }
 
-// 提交邏輯 (支援圖片上傳與資料彙整)
+// 提交到 Google Sheets (支援圖片轉碼與完整欄位)
 document.getElementById("estimationForm").onsubmit = async (e) => {
     e.preventDefault();
     const submitBtn = e.target.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
-    submitBtn.textContent = "資料處理中...";
+    submitBtn.textContent = "資料上傳中，請稍候...";
 
     const form = e.target;
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
 
-    // 額外加入試算表需要的資訊
+    // 抓取網頁上動態產生的資訊 (這些不在原本的輸入框內)
     data.totalPrice = document.getElementById("totalPrice").textContent;
     const areaSelect = document.getElementById("areaSize");
     data.areaSize_text = areaSelect.options[areaSelect.selectedIndex].text;
 
-    // 圖片轉 Base64 處理函數
+    // 圖片轉碼處理
     const toBase64 = file => new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -167,34 +167,36 @@ document.getElementById("estimationForm").onsubmit = async (e) => {
         reader.onerror = error => reject(error);
     });
 
-    // 處理圖片上傳
     const fileInput = document.getElementById("siteImages");
     const files = fileInput.files;
     for (let i = 0; i < files.length; i++) {
         try {
             data['file' + (i + 1)] = await toBase64(files[i]);
         } catch (err) {
-            console.error("圖片轉碼失敗", err);
+            console.error("圖片轉換失敗", err);
         }
     }
 
     try {
-        // 重要：請將下方的網址替換為您部署後獲得的「網頁應用程式網址」
-        const gasUrl = "https://script.google.com/macros/s/AKfycbzUGaGHqrI5dMrWU0V-Zz9mEFR1B8PVdZS6yxPbEDOkL1gq1nrouCvcwLr4XdlICv1TwQ/exec"; 
+        /**
+         * 重要：請將下方的引號內網址，替換成您剛才在 Apps Script 部署後獲得的 URL
+         */
+        const gasUrl = "https://script.google.com/macros/s/AKfycbxrrt2aGXlJqwlvT4xviSxrem_1lm7UIO-pKdOj0c469PwbO3WWzncmTtnV-PromWeOOA/exec"; 
         
+        // 使用 URLSearchParams 封裝資料送出
         await fetch(gasUrl, {
             method: "POST",
-            mode: "no-cors",
+            mode: "no-cors", // 必須使用 no-cors 模式
             body: new URLSearchParams(data)
         });
         
-        alert("預約資料已成功送出！我們會盡快聯絡您。");
+        alert("估價資料已送出成功！我們將會盡快與您聯絡。");
         form.reset();
-        nextStep(1); 
+        nextStep(1); // 返回第一步
         document.getElementById("totalPrice").textContent = "0";
     } catch (error) {
-        console.error(error);
-        alert("傳送發生錯誤，請聯絡客服。");
+        console.error("傳送失敗:", error);
+        alert("傳送發生錯誤，請檢查網路，或截圖目前畫面聯絡客服。");
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = "完成送出";
