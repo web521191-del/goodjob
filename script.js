@@ -218,7 +218,7 @@ document.getElementById("estimationForm").onsubmit = async (e) => {
 
     try {
         // 使用你提供的 GAS URL
-        const gasUrl = "https://script.google.com/macros/s/AKfycbxGKMHrBNWgPYmZ6aLZC9NyVWI0S7eMRBxVQcX4y8YJB6ZgeizMex5UEAOfwiL5UDriYQ/exec"; 
+        const gasUrl = "https://script.google.com/macros/s/AKfycbw8A03QNOW_X8s48kGvR82_woEKRzpaGJBV7ADmsbSmmLjOb8hdNy7MLC52wAj3YBbuwg/exec"; 
         
         // 使用 URLSearchParams 確保資料格式相容於 Google Apps Script 的 doPost(e)
         await fetch(gasUrl, {
