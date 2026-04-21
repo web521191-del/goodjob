@@ -172,18 +172,41 @@ document.getElementById("estimationForm").onsubmit = async (e) => {
         data.areaSize_text = areaSelect.options[areaSelect.selectedIndex].text;
     }
 
-    // 圖片轉碼處理 (Base64)
+    // --- 圖片壓縮與轉碼處理 (Canvas Resizer) ---
     const toBase64 = file => new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 1024; // 限制圖片最大寬度
+                let width = img.width;
+                let height = img.height;
+
+                // 若圖片寬度大於限制，進行等比例縮放
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // 輸出壓縮後的 Base64 (畫質設為 0.7)
+                resolve(canvas.toDataURL('image/jpeg', 0.7));
+            };
+        };
         reader.onerror = error => reject(error);
     });
 
     const fileInput = document.getElementById("siteImages");
     const files = fileInput.files;
     
-    // 循序處理圖片上傳
+    // 循序處理圖片壓縮與上傳準備
     for (let i = 0; i < files.length; i++) {
         try {
             // 標記欄位為 file1, file2... 以便 GAS 對應
