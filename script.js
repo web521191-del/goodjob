@@ -1,3 +1,4 @@
+// 附件資料：坪數與安裝費對照
 const priceData = [
     { size: "2坪內", power: "2.2 kW", splitPrice: 4500, windowPrice: 1500 },
     { size: "2~4 坪", power: "2.8 kW", splitPrice: 4500, windowPrice: 1800 },
@@ -11,6 +12,7 @@ const priceData = [
     { size: "18~20 坪", power: "14kW", splitPrice: 0, windowPrice: 0 }
 ];
 
+// 品牌型號資料
 const brandModels = {
     "大金DAIKIN空調": ["橫綱Z系列", "大關Z系列", "豪菁Z系列"],
     "日立HITACHI空調": ["尊榮NTB冷暖系列", "頂級NP冷暖系列", "頂級JP冷專系列", "旗艦HP冷暖系列", "旗艦QP冷專系列", "精品YP冷暖系列", "精品SP冷專系列", "豪華VP冷暖系列", "NR1窗型變頻冷暖系列", "JR1窗型變頻冷專系列", "QR窗型變頻冷專系列", "HR窗型變頻冷暖系列"],
@@ -26,6 +28,7 @@ const brandModels = {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+    // 生成坪數選項
     const areaSelect = document.getElementById("areaSize");
     priceData.forEach((item, index) => {
         let option = document.createElement("option");
@@ -34,6 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
         areaSelect.appendChild(option);
     });
 
+    // 生成品牌選項
     const brandSelect = document.getElementById("brandSelect");
     for (let brand in brandModels) {
         let option = document.createElement("option");
@@ -42,33 +46,40 @@ document.addEventListener("DOMContentLoaded", () => {
         brandSelect.appendChild(option);
     }
 
+    // 禁止選擇週日
+    const dateInput = document.getElementById("bookDate");
+    if(dateInput){
+        dateInput.addEventListener("input", (e) => {
+            const day = new Date(e.target.value).getUTCDay();
+            if (day === 0) {
+                alert("週日無法預約，請選擇其他日期");
+                e.target.value = "";
+            }
+        });
+    }
+
     document.getElementById("estimationForm").addEventListener("change", calculateTotal);
     document.querySelectorAll("input").forEach(input => input.addEventListener("input", calculateTotal));
 });
 
-function calculateTotal() {
-    let total = 0;
-    const form = document.getElementById("estimationForm");
-    const formData = new FormData(form);
-
-    const acType = formData.get("acType");
-    const priceIdx = formData.get("areaSize");
-    if(priceIdx !== null && priceIdx !== "") {
-        const basePrice = (acType === "分離式變頻空調冷氣") ? priceData[priceIdx].splitPrice : priceData[priceIdx].windowPrice;
-        total += basePrice;
+function updateFloorLimit() {
+    const buildingType = document.getElementById("buildingType").value;
+    const floorInput = document.getElementById("floor");
+    
+    if (buildingType === "透天或公寓") {
+        floorInput.max = 9;
+        if (parseInt(floorInput.value) > 9) floorInput.value = 9;
+    } else {
+        floorInput.max = 30;
     }
+    calculateTotal();
+}
 
-    total += parseInt(form.bracket.options[form.bracket.selectedIndex].dataset.price || 0);
-    total += parseInt(form.drainPump.options[form.drainPump.selectedIndex].dataset.price || 0);
-    total += parseInt(form.oldRemoval.options[form.oldRemoval.selectedIndex].dataset.price || 0);
-    total += (parseInt(form.extraPipe.options[form.extraPipe.selectedIndex].dataset.price || 0) * parseInt(formData.get("pipeLength") || 0));
-    total += (parseInt(form.powerWire.options[form.powerWire.selectedIndex].dataset.price || 0) * parseInt(formData.get("wireLength") || 0));
-
-    const building = formData.get("buildingType");
-    const floor = parseInt(formData.get("floor") || 1);
-    if (building === "透天或公寓" && floor >= 2) total += (floor - 1) * 100;
-
-    document.getElementById("totalPrice").textContent = total.toLocaleString();
+function validateFiles(input) {
+    if (input.files.length > 5) {
+        alert("最多只能上傳 5 張照片！");
+        input.value = "";
+    }
 }
 
 function nextStep(n) {
@@ -86,31 +97,83 @@ function prevStep(n) {
 function updateModels() {
     const brand = document.getElementById("brandSelect").value;
     const modelSelect = document.getElementById("modelSelect");
-    modelSelect.innerHTML = brand ? brandModels[brand].map(m => `<option value="${m}">${m}</option>`).join('') : '<option value="">請先選擇品牌</option>';
+    modelSelect.innerHTML = "";
+    if (brand && brandModels[brand]) {
+        brandModels[brand].forEach(m => {
+            let option = document.createElement("option");
+            option.value = m;
+            option.textContent = m;
+            modelSelect.appendChild(option);
+        });
+    }
 }
 
-function validateFiles(input) {
-    if (input.files.length > 5) { alert("最多只能上傳 5 張照片！"); input.value = ""; }
+function calculateTotal() {
+    let total = 0;
+    const form = document.getElementById("estimationForm");
+    const formData = new FormData(form);
+
+    const acType = formData.get("acType");
+    const priceIdx = formData.get("areaSize");
+    if(priceIdx !== null && priceIdx !== "") {
+        const basePrice = (acType === "分離式變頻空調冷氣") 
+            ? priceData[priceIdx].splitPrice 
+            : priceData[priceIdx].windowPrice;
+        total += basePrice;
+    }
+
+    total += parseInt(form.bracket.options[form.bracket.selectedIndex].dataset.price || 0);
+    total += parseInt(form.drainPump.options[form.drainPump.selectedIndex].dataset.price || 0);
+    total += parseInt(form.oldRemoval.options[form.oldRemoval.selectedIndex].dataset.price || 0);
+
+    const pipeRate = parseInt(form.extraPipe.options[form.extraPipe.selectedIndex].dataset.price || 0);
+    const pipeLen = parseInt(formData.get("pipeLength") || 0);
+    total += (pipeRate * pipeLen);
+
+    const wireRate = parseInt(form.powerWire.options[form.powerWire.selectedIndex].dataset.price || 0);
+    const wireLen = parseInt(formData.get("wireLength") || 0);
+    total += (wireRate * wireLen);
+
+    const building = formData.get("buildingType");
+    const floor = parseInt(formData.get("floor") || 1);
+    if (building === "透天或公寓" && floor >= 2) {
+        total += (floor - 1) * 100;
+    }
+
+    document.getElementById("totalPrice").textContent = total.toLocaleString();
 }
 
-// 提交到 Google Sheets
+/**
+ * 提交到 Google Sheets 
+ */
 document.getElementById("estimationForm").onsubmit = async (e) => {
     e.preventDefault();
     const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    // 防止重複點擊
     submitBtn.disabled = true;
-    submitBtn.textContent = "資料上傳中...";
+    submitBtn.textContent = "資料上傳中，請稍候...";
 
     const form = e.target;
     const formData = new FormData(form);
+    
+    // 建立一個乾淨的資料物件，排除原始 File 物件
     const data = {};
-    formData.forEach((value, key) => { if (!(value instanceof File)) data[key] = value; });
+    formData.forEach((value, key) => {
+        if (!(value instanceof File)) {
+            data[key] = value;
+        }
+    });
 
+    // 抓取網頁上動態產生的額外資訊
     data.totalPrice = document.getElementById("totalPrice").textContent;
     const areaSelect = document.getElementById("areaSize");
-    data.areaSize_text = areaSelect.options[areaSelect.selectedIndex].text;
+    if (areaSelect.selectedIndex !== -1) {
+        data.areaSize_text = areaSelect.options[areaSelect.selectedIndex].text;
+    }
 
-    // 圖片轉碼
-    const toBase64 = file => new Promise((resolve) => {
+    // --- 圖片壓縮與轉碼處理 (Canvas Resizer) ---
+    const toBase64 = file => new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = (event) => {
@@ -118,37 +181,67 @@ document.getElementById("estimationForm").onsubmit = async (e) => {
             img.src = event.target.result;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const MAX_WIDTH = 800; 
-                let width = img.width, height = img.height;
-                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-                canvas.width = width; canvas.height = height;
-                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                const MAX_WIDTH = 1024; // 限制圖片最大寬度
+                let width = img.width;
+                let height = img.height;
+
+                // 若圖片寬度大於限制，進行等比例縮放
+                if (width > MAX_WIDTH) {
+                    height *= MAX_WIDTH / width;
+                    width = MAX_WIDTH;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // 輸出壓縮後的 Base64 (畫質設為 0.7)
                 resolve(canvas.toDataURL('image/jpeg', 0.7));
             };
         };
+        reader.onerror = error => reject(error);
     });
 
-    const files = document.getElementById("siteImages").files;
+    const fileInput = document.getElementById("siteImages");
+    const files = fileInput.files;
+    
+    // 循序處理圖片壓縮與上傳準備
     for (let i = 0; i < files.length; i++) {
-        data['file' + (i + 1)] = await toBase64(files[i]);
+        try {
+            // 標記欄位為 file1, file2... 以便 GAS 對應
+            data['file' + (i + 1)] = await toBase64(files[i]);
+        } catch (err) {
+            console.error(`圖片 ${i+1} 轉換失敗:`, err);
+        }
     }
 
     try {
-        const gasUrl = "您的GAS部署網址"; 
+        // 使用你提供的 GAS URL
+        const gasUrl = "https://script.google.com/macros/s/AKfycbw8A03QNOW_X8s48kGvR82_woEKRzpaGJBV7ADmsbSmmLjOb8hdNy7MLC52wAj3YBbuwg/exec"; 
+        
+        // 使用 URLSearchParams 確保資料格式相容於 Google Apps Script 的 doPost(e)
         await fetch(gasUrl, {
             method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            mode: "no-cors", 
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
             body: new URLSearchParams(data)
         });
-        alert("估價資料已成功送出！");
+        
+        alert("估價資料已成功送出！我們將會盡快與您聯絡。");
+        
+        // 重置表單並回到第一步
         form.reset();
         document.getElementById("totalPrice").textContent = "0";
-        nextStep(1);
+        nextStep(1); 
+        
     } catch (error) {
-        alert("傳送失敗，請重試。");
+        console.error("傳送發生異常:", error);
+        alert("傳送失敗，請檢查網路連線，或截圖目前畫面聯絡客服。");
     } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = "確認並送出估價單";
+        submitBtn.textContent = "完成送出";
     }
 };
