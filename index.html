@@ -26,7 +26,7 @@
                 <h4>第一步：基本需求</h4>
                 <div class="mb-3">
                     <label class="form-label">服務類型</label>
-                    <select class="form-select" name="serviceType" onchange="calculateTotal()" required>
+                    <select class="form-select" name="serviceType" required>
                         <option value="安裝">安裝</option>
                         <option value="拆,移機">拆,移機</option>
                     </select>
@@ -34,7 +34,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">冷氣類型</label>
-                    <select class="form-select" id="acType" name="acType" onchange="calculateTotal()" required>
+                    <select class="form-select" id="acType" name="acType" required>
                         <option value="分離式變頻空調冷氣">分離式變頻空調冷氣</option>
                         <option value="窗型變頻空調冷氣">窗型變頻空調冷氣</option>
                     </select>
@@ -42,12 +42,12 @@
 
                 <div class="mb-3">
                     <label class="form-label">預計安裝坪數</label>
-                    <select class="form-select" id="areaSize" name="areaSize" onchange="calculateTotal()" required></select>
+                    <select class="form-select" id="areaSize" name="areaSize" required></select>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">室外機架</label>
-                    <select class="form-select" name="bracket" onchange="calculateTotal()">
+                    <select class="form-select" name="bracket" data-price="0">
                         <option value="不需架子(落地)" data-price="0">不需架子(落地)</option>
                         <option value="室外機L架(鍍鋅)" data-price="1000">室外機L架(鍍鋅) +$1,000</option>
                         <option value="室外機L架(白鐵)" data-price="2000">室外機L架(白鐵) +$2,000</option>
@@ -59,7 +59,7 @@
 
                 <div class="mb-3">
                     <label class="form-label">室內機排水器</label>
-                    <select class="form-select" name="drainPump" onchange="calculateTotal()">
+                    <select class="form-select" name="drainPump">
                         <option value="不需要" data-price="0">不需要</option>
                         <option value="室內機靜音排水器" data-price="2800">室內機靜音排水器 +$2,800</option>
                     </select>
@@ -67,18 +67,18 @@
 
                 <div class="mb-3">
                     <label class="form-label">預估超出標配銅管 (米)</label>
-                    <select class="form-select" name="extraPipe" onchange="calculateTotal()">
+                    <select class="form-select" name="extraPipe">
                         <option value="無" data-price="0">無</option>
                         <option value="2分/3分" data-price="450">2分/3分 ($450/米)</option>
                         <option value="2分/4分" data-price="550">2分/4分 ($550/米)</option>
                         <option value="2分/5分" data-price="650">2分/5分 ($650/米)</option>
                     </select>
-                    <input type="number" class="form-control mt-2" id="pipeLength" name="pipeLength" placeholder="請填寫超出米數" min="0" value="0" oninput="calculateTotal()">
+                    <input type="number" class="form-control mt-2" name="pipeLength" placeholder="請填寫超出米數" min="0" value="0">
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">舊機拆除</label>
-                    <select class="form-select" name="oldRemoval" onchange="calculateTotal()">
+                    <label class="form-label">舊機拆除(無安裝新機,必選,安裝新機含免費拆除舊機)</label>
+                    <select class="form-select" name="oldRemoval">
                         <option value="不需要" data-price="0">不需要</option>
                         <option value="窗型冷氣舊機拆除" data-price="1500">窗型冷氣舊機拆除 +$1,500</option>
                         <option value="分離式冷氣舊機拆除" data-price="1800">分離式冷氣舊機拆除 +$1,800</option>
@@ -86,27 +86,27 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">電源線配置</label>
-                    <select class="form-select" name="powerWire" onchange="calculateTotal()">
+                    <label class="form-label">電源線配置 (室外機附近無220V)</label>
+                    <select class="form-select" name="powerWire">
                         <option value="不需要" data-price="0">不需要</option>
                         <option value="2.2mm" data-price="100">2.2mm ($100/米)</option>
                         <option value="3.5mm" data-price="150">3.5mm ($150/米)</option>
                         <option value="5.5mm" data-price="180">5.5mm ($180/米)</option>
                     </select>
-                    <input type="number" class="form-control mt-2" id="wireLength" name="wireLength" placeholder="請填寫配線米數" min="0" value="0" oninput="calculateTotal()">
+                    <input type="number" class="form-control mt-2" name="wireLength" placeholder="請填寫配線米數" min="0" value="0">
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label">樓層與電梯</label>
                     <div class="row">
                         <div class="col-7">
-                            <select class="form-select" id="buildingType" name="buildingType" onchange="updateFloorLimit(); calculateTotal();">
+                            <select class="form-select" id="buildingType" name="buildingType" onchange="updateFloorLimit()">
                                 <option value="住宅有電梯/電梯大樓">住宅有電梯/電梯大樓</option>
                                 <option value="透天或公寓">透天或公寓</option>
                             </select>
                         </div>
                         <div class="col-5">
-                            <input type="number" class="form-control" name="floor" id="floor" min="1" max="30" value="1" placeholder="樓層" oninput="calculateTotal()">
+                            <input type="number" class="form-control" name="floor" id="floor" min="1" max="30" value="1" placeholder="樓層">
                         </div>
                     </div>
                 </div>
@@ -139,7 +139,7 @@
                 <div class="mb-4">
                     <h4>安裝環境與舊機現況</h4>
                     <label class="form-label">上傳現場照片 (最多5張)</label>
-                    <input type="file" class="form-control" id="siteImages" accept="image/*" multiple onchange="validateFiles(this)">
+                    <input type="file" class="form-control" id="siteImages" name="siteImages" accept="image/*" multiple onchange="validateFiles(this)">
                     <div class="img-preview-hint mt-1">* 建議拍攝：安裝位置、室外機放置處、電箱、舊機外觀。</div>
                 </div>
 
@@ -172,7 +172,7 @@
                     <br><small>*此為工資預估金額，客服將會針對您選擇的品牌冷氣價格與您的預估工資重新報價給您,實際報價以現場為準。</small>
                 </div>
 
-                <button type="submit" class="btn btn-success w-100 mb-2" id="submitBtn">完成送出</button>
+                <button type="submit" class="btn btn-success w-100 mb-2">完成送出</button>
                 <a href="https://line.me/R/ti/p/@ruo0988r" class="btn btn-line w-100 mb-2">聯絡客服確認品牌型號報價</a>
                 <button type="button" class="btn btn-secondary w-100" onclick="prevStep(2)">上一步</button>
             </div>
